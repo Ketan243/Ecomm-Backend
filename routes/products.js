@@ -1,52 +1,69 @@
 const router = require('express').Router();
 const verify = require('./verifyToken');
+const multiparty = require('multiparty')
 const Product = require('../model/Product')
-const {productVal} = require('../validation/val')
+const { productVal } = require('../validation/val')
 
-router.get('/' , async (req,res)=>{
+//Image Upload
+const IMAGE_UPLOAD_DIR = './public/images';
+// const IMAGE_BASE_URL = 'http://localhost:3000/images/'
+const IMAGE_BASE_URL = 'https://ecomm-backend-production-acca.up.railway.app/images/'
+
+router.get('/', async (req, res) => {
 
     const product = await Product.find();
     res.json({
-        product:product
+        product: product
     });
 });
 
-router.post('/',verify ,async (req,res)=>{
+router.post('/', verify, async (req, res) => {
     const id = req.body.id;
 
     //checking if product exist and returning the product matching id
-    const product = await Product.findOne({_id:id});
+    const product = await Product.findOne({ _id: id });
     res.json({
-        Product:product
+        Product: product
     });
 });
 
-router.post('/add_product',verify, async (req, res)=>{
-    //Validation
-    const {error} = productVal(req.body);
-    if(error) return res.status(400).send(error.details[0].message);
-    
-    //Checking if product already exists
-    const productExist = await Product.findOne({product_name:req.body.product_name});
-    
-    if(productExist) return res.status(400).send('Product already exists'); 
+router.post('/add_product', verify, async (req, res) => {
+    let form = new multiparty.Form({ uploadDir: IMAGE_UPLOAD_DIR });
+    form.parse(req, async function (err, fields, files) {
+        if (err) return res.send({ error: err.message });
 
-    //Adding new product
-    const product = new Product({
-        product_name:req.body.product_name,
-        product_desc:req.body.product_desc,
-        image:req.body.image,
-        price:req.body.price,
-        brand_name:req.body.brand_name,
-        category:req.body.category
-    });
-    try{
-        const savedProduct = await product.save();
-        res.send({product_id:product._id});
-    }
-    catch(err){
-        res.status(400).send(err);
-    }
+        const imagePath = files.image[0].path;
+        const imageFileName = imagePath.slice(imagePath.lastIndexOf("\\") + 1);
+        const imageURL = IMAGE_BASE_URL + imageFileName;
+        console.log(imageURL);
+
+        //Checking if product already exists
+        const productExist = await Product.findOne({ product_name: fields.product_name[0] });
+
+        if (productExist) return res.status(400).send('Product already exists');
+
+        //Adding new product
+        const product = new Product({
+            product_name: fields.product_name[0],
+            product_desc: fields.product_desc[0],
+            image: imageURL,
+            price: fields.price[0],
+            brand_name: fields.brand_name[0],
+            category: fields.category[0]
+        });
+
+        try {
+            const savedProduct = await product.save();
+            console.log(`Product = ${JSON.stringify(savedProduct, null, 2)}`);
+            res.send({ savedProduct });
+        }
+        catch (err) {
+            res.status(400).send(err);
+        }
+    })
+
+
+
 });
 
 module.exports = router;
