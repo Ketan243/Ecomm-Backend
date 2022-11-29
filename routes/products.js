@@ -5,7 +5,7 @@ const Product = require('../model/Product')
 const { productVal } = require('../validation/val')
 
 //Image Upload
-const IMAGE_UPLOAD_DIR = './public/images';
+const IMAGE_UPLOAD_DIR = './images';
 const IMAGE_BASE_URL = 'http://localhost:3000/images/'
 // const IMAGE_BASE_URL = 'https://ecomm-backend-production-acca.up.railway.app/images/'
 
@@ -36,7 +36,7 @@ router.post('/add_product', verify, async (req, res) => {
         const imagePath = files.image[0].path;
         const imageFileName = imagePath.slice(imagePath.lastIndexOf("\\") + 1);
         const imageURL = url + '/images/' + imageFileName;
-
+        console.log(imageURL);
         //Checking if product already exists
         const productExist = await Product.findOne({ product_name: fields.product_name[0] });
 
