@@ -6,8 +6,8 @@ const { productVal } = require('../validation/val')
 
 //Image Upload
 const IMAGE_UPLOAD_DIR = './public/images';
-// const IMAGE_BASE_URL = 'http://localhost:3000/images/'
-const IMAGE_BASE_URL = 'https://ecomm-backend-production-acca.up.railway.app/images/'
+const IMAGE_BASE_URL = 'http://localhost:3000/images/'
+// const IMAGE_BASE_URL = 'https://ecomm-backend-production-acca.up.railway.app/images/'
 
 router.get('/', async (req, res) => {
 
@@ -28,14 +28,14 @@ router.post('/', verify, async (req, res) => {
 });
 
 router.post('/add_product', verify, async (req, res) => {
+    const url = req.protocol + '://' + req.get("host");
     let form = new multiparty.Form({ uploadDir: IMAGE_UPLOAD_DIR });
     form.parse(req, async function (err, fields, files) {
         if (err) return res.send({ error: err.message });
 
         const imagePath = files.image[0].path;
         const imageFileName = imagePath.slice(imagePath.lastIndexOf("\\") + 1);
-        const imageURL = IMAGE_BASE_URL + imageFileName;
-        console.log(imageURL);
+        const imageURL = url + '/images/' + imageFileName;
 
         //Checking if product already exists
         const productExist = await Product.findOne({ product_name: fields.product_name[0] });
