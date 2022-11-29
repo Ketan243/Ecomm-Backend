@@ -35,7 +35,7 @@ router.post('/add_product', verify, async (req, res) => {
 
         const imagePath = files.image[0].path;
         const imageFileName = imagePath.slice(imagePath.lastIndexOf("\\") + 1);
-        const imageURL = url + '/images/' + imageFileName;
+        const imageURL = url + '/' + imageFileName;
         console.log(imageURL);
         //Checking if product already exists
         const productExist = await Product.findOne({ product_name: fields.product_name[0] });
